@@ -3,6 +3,7 @@ using ContactDetails.API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NLog;
 
 namespace ContactDetails.API.Controllers
 {
@@ -11,15 +12,19 @@ namespace ContactDetails.API.Controllers
     public class ContactsController : Controller
     {
         private readonly ContactDetailsDbContext _contactDetailsDbContext;
+        private readonly ILogger<ContactsController> _logger;
+        private static Logger logger = LogManager.GetLogger("ContactsController");
 
-        public ContactsController(ContactDetailsDbContext contactDetailsDbContext)
+        public ContactsController(ContactDetailsDbContext contactDetailsDbContext, ILogger<ContactsController> logger)
         {
             _contactDetailsDbContext = contactDetailsDbContext;
+            _logger = logger;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllContacts()
         {
+            logger.Info("Get All Contacts Called");
             var contacts = await _contactDetailsDbContext.Contacts.ToListAsync();
             return Ok(contacts);
         }
@@ -27,6 +32,7 @@ namespace ContactDetails.API.Controllers
         [HttpPost]
         public async Task<IActionResult> AddContact([FromBody] Contact contactRequest)
         {
+            logger.Info("Add Contacts Called");
             contactRequest.Id = Guid.NewGuid();
             await _contactDetailsDbContext.Contacts.AddAsync(contactRequest);
             await _contactDetailsDbContext.SaveChangesAsync();
@@ -37,6 +43,7 @@ namespace ContactDetails.API.Controllers
         [Route("{id:Guid}")]
         public async Task<IActionResult> GetContact([FromRoute] Guid id)
         {
+            logger.Info("Get Contact Called");
             var contact = await _contactDetailsDbContext.Contacts.FirstOrDefaultAsync(x => x.Id == id);
             if(contact== null)
             {
@@ -49,6 +56,7 @@ namespace ContactDetails.API.Controllers
         [Route("{id:Guid}")]
         public async Task<IActionResult> UpdateContact([FromRoute] Guid id,[FromBody] Contact updateContactRequest)
         {
+            logger.Info("Update Contact Called");
             var contact = await _contactDetailsDbContext.Contacts.FindAsync(id);
             if(contact == null)
             {
@@ -71,6 +79,7 @@ namespace ContactDetails.API.Controllers
         [Route("{id:Guid}")]
         public async Task<IActionResult> DeleteContact([FromRoute] Guid id)
         {
+            logger.Info("Delete Contact Called");
             var contact = await _contactDetailsDbContext.Contacts.FindAsync(id);
             if (contact == null)
             {
